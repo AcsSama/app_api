@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: Jan 11, 2026 at 04:38 PM
+-- Generation Time: Jan 14, 2026 at 02:22 PM
 -- Server version: 10.4.32-MariaDB
 -- PHP Version: 8.0.30
 
@@ -72,7 +72,9 @@ CREATE TABLE `posts` (
 INSERT INTO `posts` (`id`, `user_id`, `game_name`, `title`, `description`, `price`, `status`, `image_url`, `created_at`) VALUES
 (1, 1, 'Genshin Impact', 'ไอดี AR55 มีตัว 5★ หลายตัว', 'ไอดี AR55 มี Ganyu, Hu Tao, Zhongli ของเยอะ ไม่ได้เล่นแล้ว สนใจต่อรองได้', 4500.00, 'active', 'https://example.com/images/genshin_acc1.jpg', '2026-01-08 17:57:39'),
 (2, 1, 'Valorant', 'ไอดี Valorant แร็งค์ Diamond', 'สกินปืนครบหลายเซ็ต แร็งค์ Diamond 2 เล่นน้อยแล้ว อยากปล่อยต่อ', 3200.00, 'active', 'https://example.com/images/valo_acc1.jpg', '2026-01-08 17:57:39'),
-(3, 2, 'RoV', 'ไอดี RoV ฮีโร่ครบ สกินเยอะ', 'มีฮีโร่ครบเกือบทุกตัว สกิน Limited หลายสกิน ไม่ผูกเบอร์', 2500.00, 'active', 'https://example.com/images/rov_acc1.jpg', '2026-01-08 17:57:39');
+(3, 2, 'RoV', 'ไอดี RoV ฮีโร่ครบ สกินเยอะ', 'มีฮีโร่ครบเกือบทุกตัว สกิน Limited หลายสกิน ไม่ผูกเบอร์', 2500.00, 'active', 'https://example.com/images/rov_acc1.jpg', '2026-01-08 17:57:39'),
+(4, 1, 'Line Ranger', 'ไอดีป้ายเหลืองดองบี้', 'ไอดีป้ายเหลืองดองบี้ 9999+', 1000.00, 'active', NULL, '2026-01-14 20:02:27'),
+(5, 1, 'ฟหกก', 'sdgsdg', 'sdsgsdg', 200.00, 'active', NULL, '2026-01-14 20:04:53');
 
 -- --------------------------------------------------------
 
@@ -93,7 +95,7 @@ CREATE TABLE `users` (
 --
 
 INSERT INTO `users` (`id`, `email`, `password_hash`, `display_name`, `created_at`) VALUES
-(1, 'a@gmail.com', 'asdd', 'Alice', '2026-01-08 17:57:31'),
+(1, 'a@gmail.com', '$2y$10$WV0remO9IXhWFtK7Z.mgq.DB5l/cu8L2CmO6tiUWVskSN0Db7gRoW', 'Alice', '2026-01-08 17:57:31'),
 (2, 'bob@example.com', '$2y$10$bbbbb', 'Bob', '2026-01-08 17:57:31'),
 (3, 'charlie@example.com', '$2y$10$ccccccc', 'Charlie', '2026-01-08 17:57:31');
 
@@ -138,7 +140,7 @@ ALTER TABLE `messages`
 -- AUTO_INCREMENT for table `posts`
 --
 ALTER TABLE `posts`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=6;
 
 --
 -- AUTO_INCREMENT for table `users`

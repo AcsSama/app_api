@@ -1,6 +1,8 @@
 <?php
 header('Content-Type: application/json');
-header('Access-Control-Allow-Origin: *');
+header('Access-Control-Allow-Origin: *'); // <-- บรรทัดนี้สำคัญต้องใส่
+header('Access-Control-Allow-Headers: *, ngrok-skip-browser-warning, content-type'); // <-- บรรทัดนี้สำคัญต้องใส่
+header('Access-Control-Allow-Methods: GET, POST, OPTIONS'); // <-- บรรทัดนี้สำคัญต้องใส่
 
 require_once 'db.php';
 
