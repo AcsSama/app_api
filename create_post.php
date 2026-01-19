@@ -14,15 +14,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
 // รับ JSON body
 $input = json_decode(file_get_contents('php://input'), true);
 
-// *** แก้ตรงนี้: ใช้ $input ไม่ใช่ $data ***
+// อ่านค่าจาก JSON
 $userId      = isset($input['user_id']) ? (int)$input['user_id'] : 0;
 $gameName    = trim($input['game_name'] ?? '');
 $title       = trim($input['title'] ?? '');
 $description = trim($input['description'] ?? '');
 $price       = isset($input['price']) ? (float)$input['price'] : 0.0;
 
-// ตอนนี้ยังไม่ทำอัปโหลดรูป image_url = NULL ไปก่อน
-$imageUrl    = null;
+// ถ้าไม่ส่ง image_url หรือส่งว่าง ให้ default เป็น '-'
+$imageUrl    = isset($input['image_url']) && trim($input['image_url']) !== ''
+    ? trim($input['image_url'])
+    : '-';
 
 // validate เบื้องต้น
 if ($userId <= 0 || $gameName === '' || $title === '' || $description === '') {
@@ -45,7 +47,7 @@ try {
         $title,
         $description,
         $price,
-        $imageUrl, // ตอนนี้เป็น NULL
+        $imageUrl,
     ]);
 
     $id = (int)$db->lastInsertId();
