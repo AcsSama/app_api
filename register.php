@@ -1,15 +1,20 @@
 <?php
-header('Content-Type: application/json');
-header('Access-Control-Allow-Origin: *'); // <-- บรรทัดนี้สำคัญต้องใส่
-header('Access-Control-Allow-Headers: *, ngrok-skip-browser-warning, content-type'); // <-- บรรทัดนี้สำคัญต้องใส่
-header('Access-Control-Allow-Methods: GET, POST, OPTIONS'); // <-- บรรทัดนี้สำคัญต้องใส่
-
 require_once 'db.php';
+
+header('Access-Control-Allow-Origin: *');
+header('Access-Control-Allow-Headers: Content-Type, ngrok-skip-browser-warning');
+header('Access-Control-Allow-Methods: GET, POST, OPTIONS');
+
+if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
+    http_response_code(200);
+    exit;
+}
+
 
 $input = json_decode(file_get_contents('php://input'), true);
 $email    = trim($input['email'] ?? '');
 $password = $input['password'] ?? '';
-$display  = trim($input['display_name'] ?? '');
+$display = trim($input['display_name'] ?? '');
 
 if (!$email || !$password || !$display) {
     http_response_code(400);
@@ -44,6 +49,7 @@ try {
         'email'        => $email,
         'display_name' => $display,
     ]);
+    error_log("REGISTER new user id=$id email=$email");
 } catch (Exception $e) {
     http_response_code(500);
     echo json_encode(['error' => 'server error', 'message' => $e->getMessage()]);
