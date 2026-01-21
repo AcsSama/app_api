@@ -11,10 +11,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
     exit;
 }
 
+$userId = isset($_GET['user_id']) ? (int)$_GET['user_id'] : 0;
+
+if ($userId <= 0) {
+    http_response_code(400);
+    echo json_encode(['error' => 'user_id required']);
+    exit;
+}
+
 try {
     $db = get_db();
 
-    $stmt = $db->query('
+    $stmt = $db->prepare('
         SELECT p.id,
                p.game_name,
                p.title,
@@ -28,10 +36,10 @@ try {
                u.display_name AS seller_name
         FROM posts p
         JOIN users u ON p.user_id = u.id
-        WHERE p.status = "active"
+        WHERE p.user_id = ?
         ORDER BY p.created_at DESC
-        LIMIT 100
     ');
+    $stmt->execute([$userId]);
     $posts = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
     echo json_encode($posts);

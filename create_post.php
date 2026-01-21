@@ -20,9 +20,11 @@ $gameName    = trim($input['game_name'] ?? '');
 $title       = trim($input['title'] ?? '');
 $description = trim($input['description'] ?? '');
 $price       = isset($input['price']) ? (float)$input['price'] : 0.0;
+$platform    = trim($input['platform'] ?? '');
+$rank        = trim($input['rank'] ?? '');
 
 // ถ้าไม่ส่ง image_url หรือส่งว่าง ให้ default เป็น '-'
-$imageUrl    = isset($input['image_url']) && trim($input['image_url']) !== ''
+$imageUrl = isset($input['image_url']) && trim($input['image_url']) !== ''
     ? trim($input['image_url'])
     : '-';
 
@@ -37,23 +39,16 @@ try {
     $db = get_db();
 
     // INSERT post
-    $stmt = $db->prepare("
-        INSERT INTO posts (user_id, game_name, title, description, price, status, image_url)
-        VALUES (?, ?, ?, ?, ?, 'active', ?)
-    ");
-    $stmt->execute([
-        $userId,
-        $gameName,
-        $title,
-        $description,
-        $price,
-        $imageUrl,
-    ]);
+    $stmt = $db->prepare('
+        INSERT INTO posts (user_id, game_name, title, description, price, status, image_url, platform, rank)
+        VALUES (?, ?, ?, ?, ?, "active", ?, ?, ?)
+    ');
+    $stmt->execute([$userId, $gameName, $title, $description, $price, $imageUrl, $platform, $rank]);
 
     $id = (int)$db->lastInsertId();
 
     // ดึงข้อมูลแถวที่เพิ่ง insert ให้ format เหมือน get_posts.php
-    $stmt = $db->prepare("
+    $stmt = $db->prepare('
         SELECT p.id,
                p.game_name,
                p.title,
@@ -61,13 +56,15 @@ try {
                p.price,
                p.status,
                p.image_url,
+               p.platform,
+               p.rank,
                p.created_at,
                u.display_name AS seller_name
         FROM posts p
         JOIN users u ON p.user_id = u.id
         WHERE p.id = ?
         LIMIT 1
-    ");
+    ');
     $stmt->execute([$id]);
     $post = $stmt->fetch(PDO::FETCH_ASSOC);
 
