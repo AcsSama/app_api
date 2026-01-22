@@ -12,7 +12,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
 }
 
 // รับ JSON body
-$input = json_decode(file_get_contents('php://input'), true);
+$rawBody = file_get_contents('php://input');
+error_log("CREATE_POST raw body len=" . strlen($rawBody));
+error_log("CREATE_POST raw body preview=" . substr($rawBody, 0, 400));
+
+$input = json_decode($rawBody, true);
+if ($input === null) {
+    error_log("CREATE_POST json_decode error: " . json_last_error_msg());
+}
 
 // อ่านค่าจาก JSON
 $userId      = isset($input['user_id']) ? (int)$input['user_id'] : 0;
@@ -23,10 +30,43 @@ $price       = isset($input['price']) ? (float)$input['price'] : 0.0;
 $platform    = trim($input['platform'] ?? '');
 $rank        = trim($input['rank'] ?? '');
 
-// ถ้าไม่ส่ง image_url หรือส่งว่าง ให้ default เป็น '-'
-$imageUrl = isset($input['image_url']) && trim($input['image_url']) !== ''
-    ? trim($input['image_url'])
-    : '-';
+// base64 image data (อาจเป็น null)
+$imageData   = $input['image_data'] ?? null;
+$imageUrl    = '-';
+
+// ถ้ามี image_data ให้ decode แล้วเซฟลงโฟลเดอร์ uploads/
+if ($imageData) {
+    error_log("CREATE_POST: received image_data length=" . strlen($imageData));
+    $imageData = str_replace(' ', '+', $imageData);
+
+    if (strpos($imageData, 'base64,') !== false) {
+        $parts = explode('base64,', $imageData);
+        $imageData = end($parts);
+    }
+
+    $binary = base64_decode($imageData);
+
+    $uploadDir = __DIR__ . '/uploads';
+    if (!is_dir($uploadDir)) {
+        mkdir($uploadDir, 0777, true);
+    }
+
+    $fileName = 'img_' . time() . '_' . rand(1000, 9999) . '.jpg';
+    $relativePath = 'uploads/' . $fileName;
+    $fullPath     = __DIR__ . '/' . $relativePath;
+
+    file_put_contents($fullPath, $binary);
+
+    error_log("CREATE_POST: saved image to $relativePath");
+
+    $imageUrl = $relativePath;
+} elseif (!empty($input['image_url'])) {
+    // fallback ถ้าอยากรองรับลิงก์จากช่อง text อยู่
+    $imageUrl = trim($input['image_url']);
+    error_log("CREATE_POST: using image_url=$imageUrl");
+} else {
+    error_log("CREATE_POST: no image provided");
+}
 
 // validate เบื้องต้น
 if ($userId <= 0 || $gameName === '' || $title === '' || $description === '') {
