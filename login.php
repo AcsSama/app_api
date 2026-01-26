@@ -24,7 +24,7 @@ if (!$email || !$password) {
 try {
     $db = get_db();
     $stmt = $db->prepare(
-        "SELECT id, email, password_hash, display_name
+        "SELECT id, email, password_hash, display_name, role
          FROM users
          WHERE email = ?"
     );
@@ -41,6 +41,7 @@ try {
         'id'           => (int)$user['id'],
         'email'        => $user['email'],
         'display_name' => $user['display_name'],
+        'role'         => $user['role'],
     ]);
 } catch (Exception $e) {
     http_response_code(500);

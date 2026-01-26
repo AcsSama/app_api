@@ -33,7 +33,7 @@ try {
     ");
     $stmt->execute([$postId, $buyerId]);
 
-    $messages = $stmt->fetchAll();
+    $messages = $stmt->fetchAll(PDO::FETCH_ASSOC);
     echo json_encode($messages);
 } catch (Exception $e) {
     http_response_code(500);
