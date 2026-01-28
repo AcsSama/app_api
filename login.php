@@ -24,7 +24,7 @@ if (!$email || !$password) {
 try {
     $db = get_db();
     $stmt = $db->prepare(
-        "SELECT id, email, password_hash, display_name, role
+        "SELECT id, email, password_hash, display_name, role, balance
          FROM users
          WHERE email = ?"
     );
@@ -33,15 +33,17 @@ try {
 
     if (!$user || !password_verify($password, $user['password_hash'])) {
         http_response_code(401);
-        echo json_encode(['error' => 'invalid credentials']);
+        echo json_encode(['error' => 'อีเมลหรือรหัสผ่านไม่ถูกต้อง']);
         exit;
     }
+
 
     echo json_encode([
         'id'           => (int)$user['id'],
         'email'        => $user['email'],
         'display_name' => $user['display_name'],
         'role'         => $user['role'],
+        'balance'      => (float)$user['balance'],   // << เพิ่มบรรทัดนี้
     ]);
 } catch (Exception $e) {
     http_response_code(500);
