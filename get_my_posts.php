@@ -30,6 +30,7 @@ try {
                p.price,
                p.status,
                p.image_url,
+               p.image_base64,
                p.platform,
                p.rank,
                p.created_at,

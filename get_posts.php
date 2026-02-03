@@ -22,6 +22,7 @@ try {
                p.price,
                p.status,
                p.image_url,
+               p.image_base64,
                p.platform,
                p.rank,
                p.created_at,
@@ -33,6 +34,11 @@ try {
         LIMIT 100
     ');
     $posts = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+    if (!empty($posts)) {
+        error_log("GET_POSTS first=" . print_r($posts[0], true));
+    }
+
 
     echo json_encode($posts);
 } catch (Exception $e) {

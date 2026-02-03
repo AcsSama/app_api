@@ -11,14 +11,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
     exit;
 }
 
-// รับ JSON body
+// อ่าน JSON body
 $rawBody = file_get_contents('php://input');
 error_log("CREATE_POST raw body len=" . strlen($rawBody));
 error_log("CREATE_POST raw body preview=" . substr($rawBody, 0, 400));
 
 $input = json_decode($rawBody, true);
-if ($input === null) {
+if (!is_array($input)) {
     error_log("CREATE_POST json_decode error: " . json_last_error_msg());
+    http_response_code(400);
+    echo json_encode(['error' => 'invalid JSON body']);
+    exit;
 }
 
 // อ่านค่าจาก JSON
@@ -32,36 +35,16 @@ $rank        = trim($input['rank'] ?? '');
 
 // base64 image data (อาจเป็น null)
 $imageData   = $input['image_data'] ?? null;
-$imageUrl    = '-';
+$imageUrl    = '-';        // ไม่ใช้แล้วก็ได้ แต่เผื่ออนาคต
+$imageBase64 = null;
 
-// ถ้ามี image_data ให้ decode แล้วเซฟลงโฟลเดอร์ uploads/
-if ($imageData) {
+// ถ้ามี image_data ให้เก็บลงคอลัมน์ image_base64 ตรง ๆ
+if (!empty($imageData)) {
+    // ไม่ต้อง decode/เซฟไฟล์ เพราะฝั่ง Flutter จะ decode เอง
+    $imageBase64 = $imageData;
     error_log("CREATE_POST: received image_data length=" . strlen($imageData));
-    $imageData = str_replace(' ', '+', $imageData);
-
-    if (strpos($imageData, 'base64,') !== false) {
-        $parts = explode('base64,', $imageData);
-        $imageData = end($parts);
-    }
-
-    $binary = base64_decode($imageData);
-
-    $uploadDir = __DIR__ . '/uploads';
-    if (!is_dir($uploadDir)) {
-        mkdir($uploadDir, 0777, true);
-    }
-
-    $fileName = 'img_' . time() . '_' . rand(1000, 9999) . '.jpg';
-    $relativePath = 'uploads/' . $fileName;
-    $fullPath     = __DIR__ . '/' . $relativePath;
-
-    file_put_contents($fullPath, $binary);
-
-    error_log("CREATE_POST: saved image to $relativePath");
-
-    $imageUrl = $relativePath;
 } elseif (!empty($input['image_url'])) {
-    // fallback ถ้าอยากรองรับลิงก์จากช่อง text อยู่
+    // fallback ถ้าอยากรองรับลิงก์จาก text อยู่
     $imageUrl = trim($input['image_url']);
     error_log("CREATE_POST: using image_url=$imageUrl");
 } else {
@@ -78,16 +61,37 @@ if ($userId <= 0 || $gameName === '' || $title === '' || $description === '') {
 try {
     $db = get_db();
 
-    // INSERT post
+    // INSERT post (เพิ่ม image_base64 เข้าไปด้วย)
     $stmt = $db->prepare('
-        INSERT INTO posts (user_id, game_name, title, description, price, status, image_url, platform, rank)
-        VALUES (?, ?, ?, ?, ?, "active", ?, ?, ?)
+        INSERT INTO posts (
+            user_id,
+            game_name,
+            title,
+            description,
+            price,
+            status,
+            image_url,
+            image_base64,
+            platform,
+            rank
+        )
+        VALUES (?, ?, ?, ?, ?, "active", ?, ?, ?, ?)
     ');
-    $stmt->execute([$userId, $gameName, $title, $description, $price, $imageUrl, $platform, $rank]);
+    $stmt->execute([
+        $userId,
+        $gameName,
+        $title,
+        $description,
+        $price,
+        $imageUrl,
+        $imageBase64,
+        $platform,
+        $rank,
+    ]);
 
     $id = (int)$db->lastInsertId();
 
-    // ดึงข้อมูลแถวที่เพิ่ง insert ให้ format เหมือน get_posts.php
+    // ดึงข้อมูลที่เพิ่ง insert (รวม image_base64) ให้เหมือน get_posts.php
     $stmt = $db->prepare('
         SELECT p.id,
                p.game_name,
@@ -96,6 +100,7 @@ try {
                p.price,
                p.status,
                p.image_url,
+               p.image_base64,
                p.platform,
                p.rank,
                p.created_at,
@@ -108,6 +113,7 @@ try {
     $stmt->execute([$id]);
     $post = $stmt->fetch(PDO::FETCH_ASSOC);
 
+    error_log("CREATE_POST row=" . print_r($post, true));
     echo json_encode($post);
 } catch (Exception $e) {
     http_response_code(500);
